@@ -64,7 +64,7 @@ class Player {
      * Modifies: Nothing.
      * Effects:  Returns the element at row, col of guess_grid.
      */
-     get_guess_grid_at(row: number, col: number): number {
+    get_guess_grid_at(row: number, col: number): number {
         // TODO: write implementation here.
         return '?'.charCodeAt(0);
     }

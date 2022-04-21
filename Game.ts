@@ -41,7 +41,15 @@ class Game {
         this.#p1 = player1;
         this.#p2 = player2;
 
-        // TODO: write implementation here.
+        if (grid1 == "" || !this.#p1.load_grid_file(grid1)) {
+            console.log(`Generating random grid for ${player1.get_name()}`);
+            this.#generate_random_grid(this.#p1);
+        }
+
+        if (grid2 == "" || !this.#p2.load_grid_file(grid2)) {
+            console.log(`Generating random grid for ${player2.get_name()}`);
+            this.#generate_random_grid(this.#p2);
+        }
     }
 
     /**
@@ -50,8 +58,7 @@ class Game {
      * Effects:  Returns p1.
      */
     get_p1(): Player {
-        // TODO: write implementation here.
-        return new Player();
+        return this.#p1;
     }
 
     /**
@@ -60,8 +67,7 @@ class Game {
      * Effects:  Returns p2.
      */
      get_p2(): Player {
-        // TODO: write implementation here.
-        return new Player();
+        return this.#p2;
     }
 
     /**
@@ -73,8 +79,7 @@ class Game {
      * Prompt:   <player_name> enter your move:
      */
     get_move(player_name: string): string {
-        // TODO: write implementation here.
-        return "";
+        return prompt(`${player_name} enter your move: `);
     }
 
     /**
@@ -99,8 +104,18 @@ class Game {
      *           Note: move format is '[1-8][A-H]' i.e "1A", "3b"
      */
     check_valid_move(move: string): boolean {
-        // TODO: write implementation here.
-        return false;
+        if (move.length != 2) {
+            console.log(`${this.#p1.get_name()} you entered an invalid input`);
+            return false;
+        }
+
+        let row = parseInt(move[0]);
+        let col = move[1].toUpperCase();
+        if (isNaN(row) || row < 1 || row > 8 || -1 == "ABCDEFGH".indexOf(col)) {
+            console.log(`${this.#p1.get_name()} you entered an invalid position`);
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -148,7 +163,46 @@ class Game {
      *           Game::opponent_make_move()
      */
     start(difficulty: string, max_num_rounds: number): void {
-        // TODO: write implementation here.
+        let roundCount = 0;
+        while (true) {
+            let move = this.get_move(this.#p1.get_name());
+            while (!this.check_valid_move(move)) {
+                move = this.get_move(this.#p1.get_name());
+            }
+            process.stdout.write("\n");
+
+            this.#p1.attack(this.#p2, new Position(move[0], move[1]));
+
+            this.#opponent_make_move(difficulty);
+
+            process.stdout.write("\nYour grid\n");
+            this.#p1.print_grid();
+            process.stdout.write(`${this.#p2.get_name()}'s grid\n`);
+            this.#p1.print_guess_grid();
+            process.stdout.write("\n");
+
+            roundCount++;
+            if (this.#p1.destroyed() && this.#p2.destroyed()) {
+                console.log(`Game over, winner is no one in ${roundCount} rounds`);
+                break;
+            }
+
+            if (this.#p1.destroyed() || this.#p2.destroyed()) {
+                let winner: string;
+                if (this.#p1.destroyed()) {
+                    winner = this.#p2.get_name();
+                } else {
+                    winner = this.#p1.get_name();
+                }
+                console.log(`Game over, winner is ${winner} in ${roundCount} rounds`);
+                break;
+            }
+
+            if (roundCount == max_num_rounds) {
+                console.log(`Game over, winner is no one in ${roundCount} rounds`);
+                break;
+            }
+        }
     }
 
     // Your code goes above this line.

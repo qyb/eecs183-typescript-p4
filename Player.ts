@@ -15,8 +15,12 @@ class Player {
      *           EMPTY_LETTER.
      */
     init_grid(): void{
-        // TODO: write implementation here.
-        return;
+        for (let i = 0; i < MAX_GRID_SIZE; i++) {
+            for (let j = 0; j < MAX_GRID_SIZE; j++) {
+                this.#grid[i*MAX_GRID_SIZE + j] = EMPTY_LETTER;
+                this.#guess_grid[i*MAX_GRID_SIZE + j] = EMPTY_LETTER;
+            }
+        }
     }
 
     /**
@@ -25,8 +29,7 @@ class Player {
      * Effects:  Returns the name of the player.
      */
     get_name(): string {
-        // TODO: write implementation here.
-        return "";
+        return this.#name;
     }
 
     /**
@@ -35,8 +38,7 @@ class Player {
      * Effects:  Returns the number of ships of the player.
      */
     get_num_ships(): number {
-        // TODO: write implementation here.
-        return -1;
+        return this.#num_ships;
     }
 
     /**
@@ -45,8 +47,7 @@ class Player {
      * Effects:  Returns the number of remaining ships of the player.
      */
     get_remaining_ships(): number {
-        // TODO: write implementation here.
-        return -1;
+        return this.#remaining_ships;
     }
 
     /**
@@ -55,8 +56,7 @@ class Player {
      * Effects:  Returns the element at row, col of grid.
      */
     get_grid_at(row: number, col: number): number {
-        // TODO: write implementation here.
-        return '?'.charCodeAt(0);
+        return this.#grid[row * MAX_GRID_SIZE + col];
     }
 
     /**
@@ -65,8 +65,7 @@ class Player {
      * Effects:  Returns the element at row, col of guess_grid.
      */
     get_guess_grid_at(row: number, col: number): number {
-        // TODO: write implementation here.
-        return '?'.charCodeAt(0);
+        return this.#guess_grid[row * MAX_GRID_SIZE + col];
     }
 
     /**
@@ -81,8 +80,30 @@ class Player {
      *           the function should return without making any changes.
      */
     add_ship(ship: Ship): void {
-        // TODO: write implementation here.
-        return;
+        if (this.#num_ships >= MAX_NUM_SHIPS) {
+            return;
+        }
+        this.#ships[this.#num_ships] = ship;
+        this.#num_ships++;
+        this.#remaining_ships++;
+
+        let start = ship.get_start();
+        let end = ship.get_end();
+        if (ship.is_horizontal()) {
+            let row = start.get_row();
+            let s = Math.min(start.get_col(), end.get_col());
+            let e = Math.max(start.get_col(), end.get_col());
+            for (let i = s; i <= e; i++) {
+                this.#grid[row * MAX_GRID_SIZE + i] = SHIP_LETTER;
+            }
+        } else {
+            let col = start.get_col();
+            let s = Math.min(start.get_row(), end.get_row());
+            let e = Math.max(start.get_row(), end.get_row());
+            for (let j = s; j <= e; j++) {
+                this.#grid[j * MAX_GRID_SIZE + col] = SHIP_LETTER;
+            }
+        }
     }
 
     /**
@@ -113,8 +134,29 @@ class Player {
      *           [name] [pos] miss
      */
     attack(opponent: Player, pos: Position): void {
-        // TODO: write implementation here.
-        return;
+        let row = pos.get_row();
+        let col = pos.get_col();
+        if (opponent.#grid[row * MAX_GRID_SIZE + col] == SHIP_LETTER) {
+            opponent.#grid[row * MAX_GRID_SIZE + col] = HIT_LETTER;
+            this.#guess_grid[row * MAX_GRID_SIZE + col] = HIT_LETTER;
+            console.log(`${this.#name} ${pos.format()} hit`);
+            for (let i = 0; i < opponent.#num_ships; i++) {
+                if (opponent.#ships[i].has_position(pos)) {
+                    opponent.#ships[i].hit();
+                    if (opponent.#ships[i].has_sunk()) {
+                        opponent.#remaining_ships--;
+                        this.announce_ship_sunk(opponent.#ships[i].get_size());
+                    }
+                    break;
+                }
+            }
+        } else {
+            if (opponent.#grid[row * MAX_GRID_SIZE + col] != HIT_LETTER) {
+                opponent.#grid[row * MAX_GRID_SIZE + col] = MISS_LETTER;
+                this.#guess_grid[row * MAX_GRID_SIZE + col] = MISS_LETTER;
+            }
+            console.log(`${this.#name} ${pos.format()} miss`);
+        }
     }
 
     /**
@@ -130,8 +172,22 @@ class Player {
      *           if size = 5: "Congratulations [name]! You sunk a Carrier"
      */
     announce_ship_sunk(size: number): void {
-        // TODO: write implementation here.
-        return;
+        let shipType = "";
+        switch (size){
+            case 2:
+                shipType = "Destroyer";
+                break;
+            case 3:
+                shipType = "Submarine";
+                break;
+            case 4:
+                shipType = "Battleship";
+                break;
+            default:
+                shipType = "Carrier";
+                break;
+        }
+        console.log(`Congratulations ${this.#name}! You sunk a ${shipType}`);
     }
 
     /**
@@ -147,8 +203,21 @@ class Player {
      *                be exactly MAX_NUM_SHIPS.
      */
     load_grid_file(filename: string): boolean {
-        // TODO: write implementation here.
-        return false;
+        try {
+            let data = readFileSync(filename, 'utf-8');
+            let lines = data.split('\n');
+            lines.forEach(line => {
+                let pos = line.split(' ');
+                let start = new Position();
+                let end = new Position();
+                start.parse(pos[0]);
+                end.parse(pos[1]);
+                this.add_ship(new Ship(start, end));
+            })
+            return true;
+        } catch (err) {
+            return false;
+        }
     }
 
     /**
@@ -158,8 +227,7 @@ class Player {
      *           Otherwise return false.
      */
     destroyed(): boolean {
-        // TODO: write implementation here.
-        return false;
+        return this.#remaining_ships == 0 ? true:false;
     }
 
     // Your code goes above this line.

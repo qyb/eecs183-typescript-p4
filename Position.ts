@@ -40,9 +40,16 @@ class Position {
      */
     // constructor(row_in: string, col_in: string);
     constructor(row_in?: number | string, col_in?: number | string) {
-        // TODO: write implementation here.
-        this.#row = 0;
-        this.#col = 0;
+        if (typeof(row_in) === "number" && typeof(col_in) === "number") {
+            this.#row = this.#check_range(row_in);
+            this.#col = this.#check_range(col_in);
+        } else if (typeof(row_in) === "string" && typeof(col_in) === "string") {
+            this.#row = this.#check_range(parseInt(row_in) - 1);
+            this.#col = this.#check_range(col_in.toUpperCase().charCodeAt(0) - charCodeA);
+        } else {
+            this.#row = 0;
+            this.#col = 0;
+        }
     }
 
     /**
@@ -51,8 +58,7 @@ class Position {
      * Effects:  Returns row position.
      */
     get_row(): number {
-        // TODO: write implementation here.
-        return -1;
+        return this.#row;
     }
 
     /**
@@ -62,8 +68,7 @@ class Position {
      *           Note: must call check_range.
      */
     set_row(row_in: number): void {
-        // TODO: write implementation here.
-        return;
+        this.#row = this.#check_range(row_in);
     }
 
     /**
@@ -72,8 +77,7 @@ class Position {
      * Effects:  Returns col position.
      */
     get_col(): number {
-        // TODO: write implementation here.
-        return -1;
+        return this.#col;
     }
 
     /**
@@ -83,8 +87,7 @@ class Position {
      *           Note: must call check_range.
      */
     set_col(col_in: number): void {
-        // TODO: write implementation here.
-        return;
+        this.#col = this.#check_range(col_in);
     }
 
     /**
@@ -103,8 +106,22 @@ class Position {
      *           check_range() before implementing this one.
      */
     parse(input: string): void {
-        // TODO: write implementation here.
-        return;
+        let _input = input.toUpperCase();
+        let row: number;
+        let col: number;
+        if (_input.length === 2) {
+            row = parseInt(_input[0]) - 1;
+            col = _input.charCodeAt(1) - charCodeA;
+
+        } else if (_input.length == 5) {
+            row = parseInt(_input[1]) - 1;
+            col = _input.charCodeAt(3) - charCodeA;
+
+        } else {
+            row = col = 0;
+        }
+        this.#row = this.#check_range(row);
+        this.#col = this.#check_range(col);
     }
 
     /**
@@ -114,8 +131,8 @@ class Position {
      *           and col should be an uppercase letter in range [A, H].
      */
     format(): string {
-        // TODO: write implementation here.
-        return "";
+        let colChar = String.fromCharCode(this.#col + charCodeA);
+        return `(${this.#row+1},${colChar})`;
     }
 
     /**
@@ -127,8 +144,13 @@ class Position {
      * Example: check_range(-10) would return 0
      */
     #check_range(val: number): number {
-        // TODO: write implementation here.
-        return -1;
+        if (val < 0) {
+            return 0;
+        } else if (val >= MAX_GRID_SIZE) {
+            return MAX_GRID_SIZE - 1;
+        } else {
+            return val;
+        }
     }
 
     // Your code goes above this line.
